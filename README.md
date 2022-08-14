@@ -26,3 +26,5 @@ Blue led blinking is BLE scanning.
 Green led blinking is the Puck found a reader and is starting the attack.    
 Red led blinking means either no HID BLE readers were found or the attack failed.    
 RGB in sequence means the attack for that reader is finished.    
+
+Credit for this idea was the Defcon talk by Babak Javadi, Nick Draffen, Eric Bettse, Anze Jensterle.
