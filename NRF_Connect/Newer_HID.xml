@@ -1,0 +1,24 @@
+<macro name="2" icon="PLAY">
+   <assert-service description="Ensure 00009800-0000-1000-8000-00177a000002 service" uuid="00009800-0000-1000-8000-00177a000002">
+      <assert-characteristic description="Ensure 0000aa00-0000-1000-8000-00177a000002 characteristic" uuid="0000aa00-0000-1000-8000-00177a000002">
+         <assert-cccd description="Ensure CCCD"/>
+         <property name="NOTIFY" requirement="MANDATORY"/>
+      </assert-characteristic>
+   </assert-service>
+   <write-descriptor  description="Enable notifications for 0000aa00-0000-1000-8000-00177a000002" characteristic-uuid="0000aa00-0000-1000-8000-00177a000002" service-uuid="00009800-0000-1000-8000-00177a000002" uuid="00002902-0000-1000-8000-00805f9b34fb" value="0100"/>
+   <wait-for-notification description="Wait for notification to 0000aa00-0000-1000-8000-00177a000002" characteristic-uuid="0000aa00-0000-1000-8000-00177a000002" service-uuid="00009800-0000-1000-8000-00177a000002"/>
+   <write description="Wrong AID1" service-uuid="00009800-0000-1000-8000-00177a000002" characteristic-uuid="0000aa00-0000-1000-8000-00177a000002" type="WRITE_COMMAND" value="C06A82"/>
+   <wait-for-notification description="Wait for notification to 0000aa00-0000-1000-8000-00177a000002" characteristic-uuid="0000aa00-0000-1000-8000-00177a000002" service-uuid="00009800-0000-1000-8000-00177a000002"/>
+   <write description="Wrong AID2" service-uuid="00009800-0000-1000-8000-00177a000002" characteristic-uuid="0000aa00-0000-1000-8000-00177a000002" type="WRITE_COMMAND" value="C06A82"/>
+   <wait-for-notification description="Wait for notification to 0000aa00-0000-1000-8000-00177a000002" characteristic-uuid="0000aa00-0000-1000-8000-00177a000002" service-uuid="00009800-0000-1000-8000-00177a000002"/>
+   <write description="Correct AID" service-uuid="00009800-0000-1000-8000-00177a000002" characteristic-uuid="0000aa00-0000-1000-8000-00177a000002" type="WRITE_COMMAND" value="C06F0885060201400201009000"/>
+   <wait-for-notification description="Wait for notification to 0000aa00-0000-1000-8000-00177a000002" characteristic-uuid="0000aa00-0000-1000-8000-00177a000002" service-uuid="00009800-0000-1000-8000-00177a000002"/>
+   <write description="ACK1" service-uuid="00009800-0000-1000-8000-00177a000002" characteristic-uuid="0000aa00-0000-1000-8000-00177a000002" type="WRITE_COMMAND" value="C09000"/>
+   <wait-for-notification description="Wait for notification to 0000aa00-0000-1000-8000-00177a000002" characteristic-uuid="0000aa00-0000-1000-8000-00177a000002" service-uuid="00009800-0000-1000-8000-00177a000002"/>
+   <write description="Part1a" service-uuid="00009800-0000-1000-8000-00177a000002" characteristic-uuid="0000aa00-0000-1000-8000-00177a000002" type="WRITE_COMMAND" value="81443E44000000A613A111A10F80015081010182"/>
+   <write description="Part1b" service-uuid="00009800-0000-1000-8000-00177a000002" characteristic-uuid="0000aa00-0000-1000-8000-00177a000002" type="WRITE_COMMAND" value="4001018301008401019000"/>
+   <wait-for-notification description="Wait for notification to 0000aa00-0000-1000-8000-00177a000002" characteristic-uuid="0000aa00-0000-1000-8000-00177a000002" service-uuid="00009800-0000-1000-8000-00177a000002"/>
+   <write description="ACK2" service-uuid="00009800-0000-1000-8000-00177a000002" characteristic-uuid="0000aa00-0000-1000-8000-00177a000002" type="WRITE_COMMAND" value="C09000"/>
+   <wait-for-notification description="Wait for notification to 0000aa00-0000-1000-8000-00177a000002" characteristic-uuid="0000aa00-0000-1000-8000-00177a000002" service-uuid="00009800-0000-1000-8000-00177a000002"/>
+   <write description="BEEP" service-uuid="00009800-0000-1000-8000-00177a000002" characteristic-uuid="0000aa00-0000-1000-8000-00177a000002" type="WRITE_COMMAND" value="C0443E44000000A606A00485021F409000"/>
+</macro>
