@@ -1,6 +1,6 @@
 # Denial of service for BLE enabled HID readers
 
-This is denial of service attack to disable HID BLE enabled readers. After watching a DefCon29 talk about using an Apple Air tag or any NRF52 BLE chipset device, I started to recreate a very small portion of their work which was not public. Here is the talk with Babak Javadi, Nick Draffen, Eric Bettse, Anze Jensterle :
+This is denial of service attack to disable HID BLE enabled readers. After watching a DefCon29 talk about using an Apple Air tag or any NRF52 BLE chipset device, I started to recreate a very small portion of their work which was not public. Here is the talk with Babak Javadi, Nick Draffen, Eric Betts, Anze Jensterle :
 
 https://www.youtube.com/watch?v=NARJrwX_KFY
 
@@ -27,4 +27,4 @@ Green led blinking is the Puck found a reader and is starting the attack.
 Red led blinking means either no HID BLE readers were found or the attack failed.       
 ~~RGB in sequence means the attack for that reader is finished.~~    
 
-Credit for this idea was the Defcon talk by Babak Javadi, Nick Draffen, Eric Bettse, Anze Jensterle.
+Credit for this idea was the Defcon talk by Babak Javadi, Nick Draffen, Eric Betts, Anze Jensterle.
